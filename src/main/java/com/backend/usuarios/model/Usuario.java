@@ -1,0 +1,67 @@
+package com.backend.usuarios.model;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+
+@Entity
+@Table(name = "usuarios")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Usuario {
+    // Entidad principal del sistema, representa a un usuario registrado
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    // --- DATOS PERSONALES ---
+    @NotBlank(message = "El nombre es obligatorio")
+    @Size(min = 3, max = 50, message = "El nombre debe tener entre 3 y 50 caracteres")
+    private String nombre;
+
+    @NotNull(message = "La edad es obligatoria")
+    @Min(value = 18, message = "Edad mínima 18")
+    @Max(value = 100, message = "Edad máxima 100")
+    private Integer edad;
+
+    @NotBlank(message = "El género es obligatorio")
+    private String genero;
+
+    // --- CONTACTO ---
+    @Email(message = "Correo inválido")
+    @NotBlank(message = "El correo es obligatorio")
+    @Column(unique = true)
+    private String correo;
+
+    private String tipoUsuario;
+
+    @NotBlank(message = "El teléfono es obligatorio")
+    private String telefono;
+
+    // --- EXTRA ---
+    private String fotoUrl; // URL imagen perfil
+
+    private String ocupacion; // opcional
+
+    private String direccion; // opcional
+
+    @Column(name = "session_id")
+    private String sessionId;
+}

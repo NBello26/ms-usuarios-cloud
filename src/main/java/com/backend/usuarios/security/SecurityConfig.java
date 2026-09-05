@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -28,7 +29,6 @@ public class SecurityConfig {
 
     @Bean
     public JwtDecoder jwtDecoder() {
-        // URL directa limpia sin duplicar /v2.0
         String jwkSetUri = issuerUri + tenantId + "/discovery/v2.0/keys";
         return NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
     }
@@ -36,9 +36,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173"));
+        // Permite orígenes dinámicos (localhost, API Gateway, etc.)
+        config.setAllowedOriginPatterns(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+        
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
@@ -47,23 +50,25 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // 1. Apagamos CSRF y habilitamos CORS
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
-            
-            // 2. Quitamos el estado de sesión clásico (ideal para APIs con JWT)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             
-            // 3. Permisos explícitos
             .authorizeHttpRequests(auth -> auth
-                // Permitimos todo lo de Swagger y Actuator
+                // 1. Permitir peticiones preflight (OPTIONS) de CORS
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                
+                // 2. Permitir explícitamente el endpoint de Login sin token
+                .requestMatchers("/api/usuarios/login").permitAll()
+                
+                // 3. Documentación y salud
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                // Cualquier otra petición debe ir con el token
+                
+                // 4. Todo lo demás sigue requiriendo JWT
                 .anyRequest().authenticated()
             )
             
-            // 4. Configuración del Resource Server para Azure/Microsoft
             .oauth2ResourceServer(oauth2 -> oauth2
                 .jwt(jwt -> jwt.decoder(jwtDecoder()))
                 .authenticationEntryPoint((request, response, authException) -> {

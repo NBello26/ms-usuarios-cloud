@@ -1,19 +1,16 @@
 package com.backend.usuarios.service;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
-import com.backend.usuarios.dto.LoginResponseDTO;
 import com.backend.usuarios.dto.UsuarioDTO;
 import com.backend.usuarios.dto.UsuarioRequestDTO;
 import com.backend.usuarios.dto.UsuarioUpdateDTO;
 import com.backend.usuarios.model.Usuario;
 import com.backend.usuarios.repository.UsuarioRepository;
-import com.backend.usuarios.security.JwtUtil;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,7 +19,6 @@ import lombok.RequiredArgsConstructor;
 public class UsuarioService {
 
     private final UsuarioRepository repository;
-    private final JwtUtil jwtUtil;
 
     // =========================================================================
     // 1. MÉTODOS PÚBLICOS
@@ -64,7 +60,7 @@ public class UsuarioService {
     }
 
     // =========================================================================
-    // 2. MÉTODOS GENERALES (INCLUYE LOGIN CON SSO Y SESIONES)
+    // 2. MÉTODOS GENERALES (INCLUYE LOGIN CON SSO)
     // =========================================================================
 
     public List<UsuarioDTO> listar() {
@@ -87,35 +83,12 @@ public class UsuarioService {
         repository.delete(usuario);
     }
 
-    public LoginResponseDTO login(String correo) {
+    // AHORA SOLO VALIDA QUE EXISTA Y DEVUELVE SUS DATOS
+    public UsuarioDTO login(String correo) {
         Usuario usuario = repository.findByCorreo(correo)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "El usuario no está registrado en el sistema."));
 
-        String sessionId = UUID.randomUUID().toString();
-        usuario.setSessionId(sessionId);
-        repository.save(usuario);
-
-        String token = jwtUtil.generarToken(usuario.getCorreo(), sessionId, usuario.getId(), usuario.getTipoUsuario());
-
-        return LoginResponseDTO.builder()
-                .token(token)
-                .sessionId(sessionId)
-                .usuario(convertirADTO(usuario))
-                .build();
-    }
-
-    public void logout(String sessionId) {
-        Usuario usuario = repository.findBySessionId(sessionId)
-                .orElseThrow(() -> new RuntimeException("Sesión no encontrada"));
-
-        usuario.setSessionId(null); 
-        repository.save(usuario);
-    }
-
-    public boolean isSesionValida(Long id, String sessionId) {
-        return repository.findById(id)
-                .map(u -> u.getSessionId() != null && u.getSessionId().equals(sessionId))
-                .orElse(false);
+        return convertirADTO(usuario);
     }
 
     // =========================================================================
@@ -146,6 +119,7 @@ public class UsuarioService {
         Usuario usuario = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
 
+        // ... seteo de campos ...
         usuario.setNombre(dto.nombre());
         usuario.setEdad(dto.edad());
         usuario.setGenero(dto.genero());

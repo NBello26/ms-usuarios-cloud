@@ -61,7 +61,4 @@ public class Usuario {
     private String ocupacion; // opcional
 
     private String direccion; // opcional
-
-    @Column(name = "session_id")
-    private String sessionId;
 }

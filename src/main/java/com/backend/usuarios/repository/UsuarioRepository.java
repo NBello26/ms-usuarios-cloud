@@ -8,6 +8,4 @@ import java.util.Optional;
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     // Método para buscar un usuario por su correo, utilizado en el proceso de login
     Optional<Usuario> findByCorreo(String correo);
-    // Método para buscar un usuario por su sessionId, utilizado para validar sesiones activas
-    Optional<Usuario> findBySessionId(String sessionId);
 }

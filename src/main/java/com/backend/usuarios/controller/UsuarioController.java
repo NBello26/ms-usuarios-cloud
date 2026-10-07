@@ -1,6 +1,7 @@
 package com.backend.usuarios.controller;
 
 import com.backend.usuarios.dto.UsuarioDTO;
+import com.backend.usuarios.dto.UsuarioPerfilUpdateDTO;
 import com.backend.usuarios.dto.UsuarioRequestDTO;
 import com.backend.usuarios.dto.UsuarioUpdateDTO;
 import com.backend.usuarios.service.UsuarioService;
@@ -69,9 +70,9 @@ public class UsuarioController {
 
 
     // Actualizar perfil de usuario (sin cambiar correo ni contraseña)
-    @Operation(summary = "Actualizar perfil de usuario", description = "Permite modificar datos personales. No permite cambiar correo ni contraseña.")
+    @Operation(summary = "Actualizar perfil de usuario")
     @PutMapping("/{id}")
-    public ResponseEntity<UsuarioDTO> actualizar(@PathVariable Long id, @Valid @RequestBody UsuarioUpdateDTO dto) {
+    public ResponseEntity<UsuarioDTO> actualizar(@PathVariable Long id, @Valid @RequestBody UsuarioPerfilUpdateDTO dto) {
         return ResponseEntity.ok(service.actualizarUsuario(id, dto));
     }
 }

@@ -26,6 +26,12 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
     show-sql: true
 
+# CONFIGURACIÓN DE RABBITMQ
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: 5672
+    username: ${RABBITMQ_USER:admin}
+    password: ${RABBITMQ_PASSWORD:admin}
 # CONFIGURACIÓN DE SPRINGDOC PARA LA DOCUMENTACIÓN DE LA API, con opciones para mejorar la experiencia de uso de Swagger UI
 springdoc:
   show-actuator: true

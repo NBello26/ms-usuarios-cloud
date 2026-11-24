@@ -14,6 +14,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import com.backend.usuarios.dto.SsoLoginRequestDTO;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.server.ResponseStatusException;
+import com.backend.usuarios.security.RolJwtConverter;
+
 import java.util.List;
 
 @CrossOrigin("*")
@@ -37,6 +42,17 @@ public class UsuarioController {
     @GetMapping
     public ResponseEntity<List<UsuarioDTO>> listar() {
         return ResponseEntity.ok(service.listar());
+    }
+
+    // Perfil del dueño del token (el rol sale de la BD, no del cliente)
+    @Operation(summary = "Obtener el usuario autenticado (incluye rol)")
+    @GetMapping("/me")
+    public ResponseEntity<UsuarioDTO> me(@AuthenticationPrincipal Jwt jwt) {
+        String correo = RolJwtConverter.correoDe(jwt);
+        if (correo == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "El token no contiene correo.");
+        }
+        return ResponseEntity.ok(service.obtenerPorCorreo(correo));
     }
 
     // Obtener por ID

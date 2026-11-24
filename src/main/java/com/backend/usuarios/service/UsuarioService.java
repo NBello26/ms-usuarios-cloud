@@ -100,6 +100,13 @@ public class UsuarioService {
         repository.delete(usuario);
     }
 
+    // Datos (incluido el rol) del usuario dueño del token; lo usa el frontend y ms-analytics para autorizar
+    public UsuarioDTO obtenerPorCorreo(String correo) {
+        return repository.findByCorreoIgnoreCase(correo)
+                .map(this::convertirADTO)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "El usuario no está registrado en el sistema."));
+    }
+
     // AHORA SOLO VALIDA QUE EXISTA Y DEVUELVE SUS DATOS
     public UsuarioDTO login(String correo) {
         Usuario usuario = repository.findByCorreo(correo)
